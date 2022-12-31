@@ -1,23 +1,22 @@
 declare module 'robot3' {
-
   /**
    * TS Helpers
    */
   type NestedKeys<T> = T extends object
     ? {
-       [P in keyof T]-?: P extends string ? keyof T[P] : never
-     }[keyof T]
-   : never
+        [P in keyof T]-?: P extends string ? keyof T[P] : never;
+      }[keyof T]
+    : never;
 
-  type AllStateKeys<T> = NestedKeys<T> | keyof T
+  type AllStateKeys<T> = NestedKeys<T> | keyof T;
 
   /**
-   * The debugging object contains an _onEnter method, wich can be set to invoke
+   * The debugging object contains an _onEnter method, which can be set to invoke
    * this function on every transition.
    */
   export const d: {
-    _onEnter?: OnEnterFunction<Machine>
-  }
+    _onEnter?: OnEnterFunction<Machine>;
+  };
 
   /**
    * The `createMachine` function creates a state machine. It takes an object of *states* with the key being the state name.
@@ -31,7 +30,7 @@ declare module 'robot3' {
     initial: keyof S,
     states: { [K in keyof S]: MachineState },
     context?: ContextFunction<C>
-  ): Machine<typeof states, C, AllStateKeys<S>>
+  ): Machine<typeof states, C, AllStateKeys<S>>;
   /**
    * The `createMachine` function creates a state machine. It takes an object of *states* with the key being the state name.
    * The value is usually *state* but might also be *invoke*.
@@ -42,14 +41,14 @@ declare module 'robot3' {
   export function createMachine<S = {}, C = {}>(
     states: { [K in keyof S]: MachineState },
     context?: ContextFunction<C>
-  ): Machine<typeof states, C, AllStateKeys<S>>
+  ): Machine<typeof states, C, AllStateKeys<S>>;
 
   /**
-   * The `state` function returns a state object. A state can take transitions and immediates as arguments.
+   * The `state` function returns a state object. A state can take transitions and immediate's as arguments.
    *
    * @param args - Any argument needs to be of type Transition or Immediate.
    */
-  export function state(...args: (Transition | Immediate)[]): MachineState
+  export function state(...args: (Transition | Immediate | Omit<Transition, 'to'>)[]): MachineState;
 
   /**
    * A `transition` function is used to move from one state to another.
@@ -62,7 +61,17 @@ declare module 'robot3' {
     event: string,
     state: string,
     ...args: (Reducer<C, E> | Guard<C, E> | Action<C, E>)[]
-  ): Transition
+  ): Transition;
+
+  /**
+   * An `onEvent` function is a type of transition that occurs immediately; it doesn't wait for an event to proceed.
+   * @param event - This will give the name of the event that triggers this transition.
+   * @param args - Any extra argument will be evaluated to check if they are one of Reducer, Guard or Action.
+   */
+  export function onEvent<C, E>(
+    event: string,
+    ...args: (Reducer<C, E> | Guard<C, E> | Action<C, E>)[]
+  ): Omit<Transition, 'to'>;
 
   /**
    * An `immediate` function is a type of transition that occurs immediately; it doesn't wait for an event to proceed.
@@ -74,7 +83,7 @@ declare module 'robot3' {
   export function immediate<C, E>(
     state: string,
     ...args: (Reducer<C, E> | Guard<C, E> | Action<C, E>)[]
-  ): Transition
+  ): Transition;
 
   /**
    * A `guard` is a method that determines if a transition can proceed.
@@ -82,21 +91,21 @@ declare module 'robot3' {
    *
    * @param guardFunction A Function that can receive *context* and *event* and will return true or false.
    */
-  export function guard<C, E>(guardFunction?: GuardFunction<C, E>): Guard<C, E>
+  export function guard<C, E>(guardFunction?: GuardFunction<C, E>): Guard<C, E>;
 
   /**
    * A `reduce` takes a reducer function for changing the context of the machine. A common use case is to set values coming from form fields.
    *
    * @param reduceFunction A Function that can receive *context* and *event* and will return the context.
    */
-  export function reduce<C, E>(reduceFunction?: ReduceFunction<C, E>): Reducer<C, E>
+  export function reduce<C, E>(reduceFunction?: ReduceFunction<C, E>): Reducer<C, E>;
 
   /**
    * An `action` function takes a function that will be run during a transition. The primary purpose of using action is to perform side-effects.
    *
    * @param actionFunction A Function that can receive *context* and *event*. Returned values are discarded.
    */
-  export function action<C, E>(actionFunction?: ActionFunction<C, E>): Action<C, E>
+  export function action<C, E>(actionFunction?: ActionFunction<C, E>): Action<C, E>;
 
   /**
    * The `interpret` function takes a machine and creates a service that can send events into the machine, changing its states.
@@ -111,7 +120,7 @@ declare module 'robot3' {
     onChange?: InterpretOnChangeFunction<typeof machine>,
     initialContext?: M['context'],
     event?: { [K in keyof E]: any }
-  ): Service<typeof machine>
+  ): Service<typeof machine>;
 
   /**
    * The `invoke` is a special type of state that immediately invokes a Promise-returning or Machine-returning function, or another machine.
@@ -119,15 +128,21 @@ declare module 'robot3' {
    * @param fn - Promise-returning function
    * @param args - Any argument needs to be of type Transition or Immediate.
    */
-  export function invoke<C, T, E extends {} = any>(fn: (ctx: C, e?: E) => Promise<T>, ...args: (Transition | Immediate)[]): MachineState
-  
+  export function invoke<C, T, E extends {} = any>(
+    fn: (ctx: C, e?: E) => Promise<T>,
+    ...args: (Transition | Immediate)[]
+  ): MachineState;
+
   /**
    * The `invoke` is a special type of state that immediately invokes a Promise-returning or Machine-returning function, or another machine.
    *
    * @param fn - Machine-returning function
    * @param args - Any argument needs to be of type Transition or Immediate.
    */
-  export function invoke<C, E extends {} = any, M extends Machine>(fn: (ctx: C, e?: E) => M, ...args: (Transition | Immediate)[]): MachineState
+  export function invoke<C, E extends {} = any, M extends Machine>(
+    fn: (ctx: C, e?: E) => M,
+    ...args: (Transition | Immediate | Omit<Transition, 'to'>)[]
+  ): MachineState;
 
   /**
    * The `invoke` is a special type of state that immediately invokes a Promise-returning or Machine-returning function, or another machine.
@@ -135,24 +150,22 @@ declare module 'robot3' {
    * @param machine - Machine
    * @param args - Any argument needs to be of type Transition or Immediate.
    */
-  export function invoke<M extends Machine>(machine: M, ...args: (Transition | Immediate)[]): MachineState
+  export function invoke<M extends Machine>(machine: M, ...args: (Transition | Immediate)[]): MachineState;
 
   /* General Types */
 
-  export type ContextFunction<T> = (initialContext: T) => T
+  export type ContextFunction<T> = (initialContext: T) => T;
 
-  export type GuardFunction<C, E> = (context: C, event: E) => boolean
+  export type GuardFunction<C, E> = (context: C, event: E) => boolean;
 
-  export type ActionFunction<C, E> = (context: C, event: E) => unknown
+  export type ActionFunction<C, E> = (context: C, event: E) => unknown;
 
-  export type ReduceFunction<C, E> = (context: C, event: E) => C
+  export type ReduceFunction<C, E> = (context: C, event: E) => C;
 
-  export type InterpretOnChangeFunction<T extends Machine> = (
-    service: Service<T>
-  ) => void
+  export type InterpretOnChangeFunction<T extends Machine> = (service: Service<T>) => void;
 
-  export type SendEvent = string | { type: string; [key: string]: any }
-  export type SendFunction<T = SendEvent> = (event: T) => void
+  export type SendEvent = string | { type: string; [key: string]: any };
+  export type SendFunction<T = SendEvent> = (event: T) => void;
 
   /**
    * This function is invoked before entering a new state and is bound to the debug
@@ -164,52 +177,57 @@ declare module 'robot3' {
    * @param prevState - previous state
    * @param event - event provoking the state change
    */
-  export type OnEnterFunction<M extends Machine> =
-    <C = M['state']>(machine: M, to: string, state: C, prevState: C, event?: SendEvent) => void
+  export type OnEnterFunction<M extends Machine> = <C = M['state']>(
+    machine: M,
+    to: string,
+    state: C,
+    prevState: C,
+    event?: SendEvent
+  ) => void;
 
   export type Machine<S = {}, C = {}, K = string> = {
-    context: C
-    current: K
-    states: S
+    context: C;
+    current: K;
+    states: S;
     state: {
-      name: K
-      value: MachineState
-    }
-  }
+      name: K;
+      value: MachineState;
+    };
+  };
 
   export type Action<C, E> = {
-    fn: ActionFunction<C, E>
-  }
+    fn: ActionFunction<C, E>;
+  };
 
   export type Reducer<C, E> = {
-    fn: ReduceFunction<C, E>
-  }
+    fn: ReduceFunction<C, E>;
+  };
 
   export type Guard<C, E> = {
-    fn: GuardFunction<C, E>
-  }
+    fn: GuardFunction<C, E>;
+  };
 
   export interface MachineState {
-    final: boolean
-    transitions: Map<string, Transition[]>
-    immediates?: Map<string, Immediate[]>
-    enter?: any
+    final: boolean;
+    transitions: Map<string, Transition[]>;
+    immediates?: Map<string, Immediate[]>;
+    enter?: any;
   }
 
   export interface Transition {
-    from: string | null
-    to: string
-    guards: any[]
-    reducers: any[]
+    from: string | null;
+    to?: string | undefined;
+    guards: any[];
+    reducers: any[];
   }
 
   export interface Service<M extends Machine> {
-    child?: Service<M>
-    machine: M
-    context: M['context']
-    onChange: InterpretOnChangeFunction<M>
-    send: SendFunction
+    child?: Service<M>;
+    machine: M;
+    context: M['context'];
+    onChange: InterpretOnChangeFunction<M>;
+    send: SendFunction;
   }
 
-  export type Immediate = Transition
+  export type Immediate = Transition;
 }
