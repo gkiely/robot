@@ -1,6 +1,8 @@
 - Merge any relevant PR’s [x]
 - Support for updating without transitioning [x]
 - Support for parallel states []
+
+Next version
 - Convert to typescript []
 - Move tests to vitest []
 - Make sure self transitions work []
